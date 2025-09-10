@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Citizen AI - Intelligent Citizen Engagement Platform</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+  * {
+    font-family: 'Inter', sans-serif;
+  }
+
+  .fade-in {
+    animation: fadeIn 0.5s ease-in;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .card-hover {
+    transition: all 0.3s ease;
+  }
+
+  .card-hover:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+  }
+
+  .chat-window {
+    transition: all 0.3s ease;
+    transform: translateY(100%);
+    opacity: 0;
+  }
+
+  .chat-window.active {
+    transform: translateY(0);
+    opacity: 1;
+  }
+
+  .message-bubble {
+    animation: slideUp 0.3s ease;
+  }
+
+  @keyframes slideUp {
+    from { transform: translateY(10px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+
+  .status-badge {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .status-badge::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    animation: shimmer 2s infinite;
+  }
+
+  @keyframes shimmer {
+    100% { left: 100%; }
+  }
+
+  .pulse-dot {
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.2); opacity: 0.7; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+
+  .tn-emblem {
+    background-color: #006400;
+  }
+
+  .tn-gradient {
+    background: linear-gradient(135deg, #006400 0%, #228B22 100%);
+  }
+
+  .temple-gopuram {
+    background: linear-gradient(135deg, #8B0000 0%, #FF6347 100%);
+  }
+
+  .ai-icon {
+    background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%);
+    box-shadow: 0 4px 6px rgba(79, 70, 229, 0.3);
+  }
+</style>
+</head>
+<body class="bg-gray-50">
+
+<!-- Header -->
+<header class="bg-white shadow-md sticky top-0 z-40">
+  <div class="container mx-auto px-4 py-4">
+    <div class="flex justify-between items-center">
+      <div class="flex items-center">
+        <div class="tn-emblem w-12 h-12 rounded-full flex items-center justify-center mr-3">
+          <i class="fas fa-gopuram text-white text-2xl"></i>
+        </div>
+        <div>
+          <h1 class="text-2xl font-bold text-gray-800">Citizen AI</h1>
+          <p class="text-sm text-gray-600">Intelligent Citizen Engagement</p>
+        </div>
+      </div>
+      <nav class="hidden md:flex items-center space-x-6">
+        <a href="#services" class="text-gray-700 hover:text-green-600 transition-colors">Services</a>
+        <a href="#requests" class="text-gray-700 hover:text-green-600 transition-colors">Submit Request</a>
+        <a href="#track" class="text-gray-700 hover:text-green-600 transition-colors">Track Status</a>
+        <a href="#announcements" class="text-gray-700 hover:text-green-600 transition-colors">Announcements</a>
+      </nav>
+      <div class="flex items-center space-x-4">
+        <div class="relative">
+          <select id="languageSelector" class="bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500">
+            <option value="en">English</option>
+            <option value="ta">தமிழ்</option>
+          </select>
+        </div>
+        <!-- AI Chatbot Icon -->
+        <button id="headerChatToggle" class="ai-icon w-10 h-10 rounded-full flex items-center justify-center text-white hover:opacity-90 transition-opacity">
+          <i class="fas fa-robot"></i>
+        </button>
+        <!-- Login Button -->
+        <div class="relative">
+          <button id="loginButton" class="tn-emblem text-white px-4 py-2 rounded-lg hover:bg-green-800 transition-colors flex items-center" data-loggedin="false">
+            <i class="fas fa-user mr-2"></i>Login
+            <span id="loginTick" class="ml-2 text-green-300 hidden"><i class="fas fa-check-circle"></i></span>
+          </button>
+        </div>
+        <button class="md:hidden text-gray-700">
+          <i class="fas fa-bars text-xl"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- Login Modal (hidden by default) -->
+<div id="loginModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+  <div class="bg-white p-6 rounded-lg w-80 max-w-sm">
+    <h2 class="text-xl font-semibold mb-4">Login</h2>
+    <form id="loginForm" class="space-y-4">
+      <input type="text" id="loginUser" placeholder="Enter username" class="w-full px-3 py-2 border rounded" required />
+      <div class="flex justify-end space-x-2">
+        <button type="button" id="cancelLogin" class="px-4 py-2 border rounded hover:bg-gray-100">Cancel</button>
+        <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">Login</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Hero Section -->
+<section class="tn-gradient text-white py-16">
+  <div class="container mx-auto px-4">
+    <div class="flex flex-col md:flex-row items-center">
+      <div class="md:w-1/2 mb-8 md:mb-0">
+        <h2 class="text-4xl md:text-5xl font-bold mb-4">Welcome to Tamil Nadu e-Sevai</h2>
+        <p class="text-xl mb-2">Your one-stop platform for all government services</p>
+        <p class="text-lg mb-6">Your one-stop platform for all government services and citizen engagement</p>
+        <div class="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4">
+          <button onclick="scrollToSection('services')" class="bg-white text-green-700 px-6 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
+            Explore Services
+          </button>
+          <button onclick="scrollToSection('requests')" class="bg-transparent border-2 border-white text-white px-6 py-3 rounded-lg font-semibold hover:bg-white hover:text-green-700 transition-colors">
+            Submit Request
+          </button>
+        </div>
+      </div>
+      <div class="md:w-1/2 flex justify-center">
+        <div class="relative">
+          <div class="bg-white bg-opacity-20 rounded-full p-8">
+            <i class="fas fa-landmark text-8xl"></i>
+          </div>
+          <div class="absolute -top-2 -right-2 bg-green-500 text-white px-3 py-1 rounded-full text-sm font-semibold pulse-dot">
+            <i class="fas fa-circle mr-1"></i><span>Online</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- Quick Stats -->
+<section class="py-12 bg-white">
+  <div class="container mx-auto px-4">
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+      <div class="text-center">
+        <div class="bg-green-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3">
+          <i class="fas fa-users text-green-600 text-2xl"></i>
+        </div>
+        <h3 class="text-3xl font-bold text-gray-800">75 Lakhs+</h3>
+        <p class="text-gray-600">Registered Citizens</p>
+      </div>
+      <div class="text-center">
+        <div class="bg-green-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3">
+          <i class="fas fa-check-circle text-green-600 text-2xl"></i>
+        </div>
+        <h3 class="text-3xl font-bold text-gray-800">2 Crore+</h3>
+        <p class="text-gray-600">Services Delivered</p>
+      </div>
+      <div class="text-center">
+        <div class="bg-green-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3">
+          <i class="fas fa-building text-green-600 text-2xl"></i>
+        </div>
+        <h3 class="text-3xl font-bold text-gray-800">38</h3>
+        <p class="text-gray-600">Districts Covered</p>
+      </div>
+      <div class="text-center">
+        <div class="bg-green-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3">
+          <i class="fas fa-clock text-green-600 text-2xl"></i>
+        </div>
+        <h3 class="text-3xl font-bold text-gray-800">24/7</h3>
+        <p class="text-gray-600">Support Available</p>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- Services Section -->
+<section id="services" class="py-16">
+  <div class="container mx-auto px-4">
+    <div class="text-center mb-12">
+      <h2 class="text-3xl font-bold text-gray-800 mb-4">Our Services</h2>
+      <p class="text-gray-600 max-w-2xl mx-auto">Access a wide range of Tamil Nadu government services through our digital platform</p>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <!-- Service Card 1 -->
+      <div class="bg-white rounded-lg shadow-md p-6 card-hover">
+        <div class="bg-green-100 w-12 h-12 rounded-lg flex items-center justify-center mb-4">
+          <i class="fas fa-id-card text-green-600 text-xl"></i>
+        </div>
+        <h3 class="text-xl font-semibold text-gray-800 mb-2">ID & Documents</h3>
+        <p class="text-gray-600 mb-4">Aadhaar services, ration card, community certificate, income certificate</p>
+        <button class="text-green-600 font-medium hover:text-green-700">Learn More <i class="fas fa-arrow-right ml-1"></i></button>
+      </div>
+      <!-- Service Card 2 -->
+      <div class="bg-white rounded-lg shadow-md p-6 card-hover">
+        <div class="bg-green-100 w-12 h-12 rounded-lg flex items-center justify-center mb-4">
+          <i class="fas fa-home text-green-600 text-xl"></i>
+        </div>
+        <h3 class="text-xl font-semibold text-gray-800 mb-2">Property Services</h3>
+        <p class="text-gray-600 mb-4">Property registration, land records, Patta transfer, building approval</p>
+        <button class="text-green-600 font-medium hover:text-green-700">Learn More <i class="fas fa-arrow-right ml-1"></i></button>
+      </div>
+      <!-- Service Card 3 -->
+      <div class="bg-white rounded-lg shadow-md p-6 card-hover">
+        <div class="bg-green-100 w-12 h-12 rounded-lg flex items-center justify-center mb-4">
+          <i class="fas fa-graduation-cap text-green-600 text-xl"></i>
+        </div>
+        <h3 class="text-xl font-semibold text-gray-800 mb-2">Education</h3>
+        <p class="text-gray-600 mb-4">School admissions, scholarship applications, educational loans</p>
+        <button class="text-green-600 font-medium hover:text-green-700">Learn More <i class="fas fa-arrow-right ml-1"></i></button>
+      </div>
+      <!-- Service Card 4 -->
+      <div class="bg-white rounded-lg shadow-md p-6 card-hover">
+        <div class="bg-green-100 w-12 h-12 rounded-lg flex items-center justify-center mb-4">
+          <i class="fas fa-heartbeat text-green-600 text-xl"></i>
+        </div>
+        <h3 class="text-xl font-semibold text-gray-800 mb-2">Healthcare</h3>
+        <p class="text-gray-600 mb-4">CM Health Insurance, hospital appointments, birth/death certificates</p>
+        <button class="text-green-600 font-medium hover:text-green-700">Learn More <i class="fas fa-arrow-right ml-1"></i></button>
+      </div>
+      <!-- Service Card 5 -->
+      <div class="bg-white rounded-lg shadow-md p-6 card-hover">
+        <div class="bg-green-100 w-12 h-12 rounded-lg flex items-center justify-center mb-4">
+          <i class="fas fa-briefcase text-green-600 text-xl"></i>
+        </div>
+        <h3 class="text-xl font-semibold text-gray-800 mb-2">Employment</h3>
+        <p class="text-gray-600 mb-4">Employment registration, skill development, unemployment allowance</p>
+        <button class="text-green-600 font-medium hover:text-green-700">Learn More <i class="fas fa-arrow-right ml-1"></i></button>
+      </div>
+      <!-- Service Card 6 -->
+      <div class="bg-white rounded-lg shadow-md p-6 card-hover">
+        <div class="bg-green-100 w-12 h-12 rounded-lg flex items-center justify-center mb-4">
+          <i class="fas fa-car text-green-600 text-xl"></i>
+        </div>
+        <h3 class="text-xl font-semibold text-gray-800 mb-2">Transport Services</h3>
+        <p class="text-gray-600 mb-4">Driving license, vehicle registration, permits, tax payments</p>
+        <button class="text-green-600 font-medium hover:text-green-700">Learn More <i class="fas fa-arrow-right ml-1"></i></button>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- Submit Request Section -->
+<section id="requests" class="py-16 bg-white">
+  <div class="container mx-auto px-4">
+    <div class="max-w-3xl mx-auto">
+      <div class="text-center mb-12">
+        <h2 class="text-3xl font-bold text-gray-800 mb-4">Submit Your Request</h2>
+        <p class="text-gray-600">Submit your request through our digital platform</p>
+      </div>
+      <div class="bg-gray-50 rounded-lg p-8">
+        <form id="requestForm">
+          <div class="mb-6">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Service Type</label>
+            <select id="serviceType" class="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+              <option value="">Select a service</option>
+              <option value="id">ID & Documents</option>
+              <option value="property">Property Services</option>
+              <option value="education">Education</option>
+              <option value="healthcare">Healthcare</option>
+              <option value="employment">Employment</option>
+              <option value="transport">Transportation</option>
+            </select>
+          </div>
+          <div class="mb-6">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Request Title</label>
+            <input type="text" id="requestTitle" placeholder="Brief description of your request" 
+                   class="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500" />
+          </div>
+          <div class="mb-6">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Detailed Description</label>
+            <textarea id="requestDescription" rows="4" placeholder="Provide detailed information about your request" 
+                      class="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"></textarea>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Your Name</label>
+              <input type="text" id="userName" placeholder="Full name" 
+                     class="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500" />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
+              <input type="email" id="userEmail" placeholder="your@email.com" 
+                     class="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500" />
+            </div>
+          </div>
+          <div class="mb-6">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Priority Level</label>
+            <div class="flex space-x-4">
+              <label class="flex items-center">
+                <input type="radio" name="priority" value="low" class="mr-2" />
+                <span>Low</span>
+              </label>
+              <label class="flex items-center">
+                <input type="radio" name="priority" value="medium" class="mr-2" checked />
+                <span>Medium</span>
+              </label>
+              <label class="flex items-center">
+                <input type="radio" name="priority" value="high" class="mr-2" />
+                <span>High</span>
+              </label>
+            </div>
+          </div>
+          <button type="submit" class="w-full tn-emblem text-white py-3 rounded-lg font-semibold hover:bg-green-800 transition-colors">
+            Submit Request
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- Track Status Section -->
+<section id="track" class="py-16">
+  <div class="container mx-auto px-4">
+    <div class="text-center mb-12">
+      <h2 class="text-3xl font-bold text-gray-800 mb-4">Track Your Requests</h2>
+      <p class="text-gray-600">Monitor the status of your submitted requests in real-time</p>
+    </div>
+    <div class="max-w-4xl mx-auto">
+      <div class="bg-white rounded-lg shadow-md overflow-hidden">
+        <div class="p-6 border-b">
+          <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+            <h3 class="text-xl font-semibold text-gray-800 mb-4 md:mb-0">Your Requests</h3>
+            <div class="flex space-x-3">
+              <input type="text" id="trackSearch" placeholder="Search requests..." 
+                     class="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500" />
+              <button class="tn-emblem text-white px-4 py-2 rounded-lg hover:bg-green-800 transition-colors">
+                <i class="fas fa-filter"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+        <div id="requestsList" class="divide-y divide-gray-200">
+          <!-- Requests will be dynamically added here -->
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- Announcements Section -->
+<section id="announcements" class="py-16 bg-white">
+  <div class="container mx-auto px-4">
+    <div class="text-center mb-12">
+      <h2 class="text-3xl font-bold text-gray-800 mb-4">Latest Announcements</h2>
+      <p class="text-gray-600">Stay updated with the latest news and announcements</p>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <!-- Announcement Card 1 -->
+      <div class="bg-white border rounded-lg overflow-hidden card-hover">
+        <div class="h-48 tn-gradient flex items-center justify-center">
+          <i class="fas fa-bullhorn text-white text-5xl"></i>
+        </div>
+        <div class="p-6">
+          <div class="flex items-center mb-2">
+            <span class="bg-green-100 text-green-600 text-xs px-2 py-1 rounded">Important</span>
+            <span class="text-gray-500 text-sm ml-auto">2 days ago</span>
+          </div>
+          <h3 class="text-lg font-semibold text-gray-800 mb-2">New Digital Services Launched</h3>
+          <p class="text-gray-600 mb-4">We're excited to announce the launch of 5 new digital services to make citizen engagement easier.</p>
+          <button class="text-green-600 font-medium hover:text-green-700">Read More <i class="fas fa-arrow-right ml-1"></i></button>
+        </div>
+      </div>
+      <!-- Announcement Card 2 -->
+      <div class="bg-white border rounded-lg overflow-hidden card-hover">
+        <div class="h-48 tn-gradient flex items-center justify-center">
+          <i class="fas fa-calendar-check text-white text-5xl"></i>
+        </div>
+        <div class="p-6">
+          <div class="flex items-center mb-2">
+            <span class="bg-green-100 text-green-600 text-xs px-2 py-1 rounded">Event</span>
+            <span class="text-gray-500 text-sm ml-auto">1 week ago</span>
+          </div>
+          <h3 class="text-lg font-semibold text-gray-800 mb-2">Citizen Engagement Summit 2024</h3>
+          <p class="text-gray-600 mb-4">Join us for the annual citizen engagement summit on March 15, 2024.</p>
+          <button class="text-green-600 font-medium hover:text-green-700">Register Now <i class="fas fa-arrow-right ml-1"></i></button>
+        </div>
+      </div>
+      <!-- Announcement Card 3 -->
+      <div class="bg-white border rounded-lg overflow-hidden card-hover">
+        <div class="h-48 tn-gradient flex items-center justify-center">
+          <i class="fas fa-award text-white text-5xl"></i>
+        </div>
+        <div class="p-6">
+          <div class="flex items-center mb-2">
+            <span class="bg-green-100 text-green-600 text-xs px-2 py-1 rounded">Achievement</span>
+            <span class="text-gray-500 text-sm ml-auto">2 weeks ago</span>
+          </div>
+          <h3 class="text-lg font-semibold text-gray-800 mb-2">100K Requests Milestone</h3>
+          <p class="text-gray-600 mb-4">We've successfully processed over 100,000 citizen requests this year!</p>
+          <button class="text-green-600 font-medium hover:text-green-700">View Stats <i class="fas fa-arrow-right ml-1"></i></button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- Footer -->
+<footer class="tn-emblem text-white py-12">
+  <div class="container mx-auto px-4">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+      <div>
+        <div class="flex items-center mb-4">
+          <i class="fas fa-gopuram text-green-300 text-2xl mr-2"></i>
+          <h3 class="text-xl font-bold">Tamil Nadu e-Sevai</h3>
+        </div>
+        <p class="text-gray-300">Empowering citizens through intelligent digital engagement.</p>
+      </div>
+      <div>
+        <h4 class="text-lg font-semibold mb-4">Quick Links</h4>
+        <ul class="space-y-2 text-gray-300">
+          <li><a href="#" class="hover:text-white transition-colors">About Us</a></li>
+          <li><a href="#services" class="hover:text-white transition-colors">Services</a></li>
+          <li><a href="#contact" class="hover:text-white transition-colors">Contact</a></li>
+          <li><a href="#help-center" class="hover:text-white transition-colors">Help Center</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4 class="text-lg font-semibold mb-4">Resources</h4>
+        <ul class="space-y-2 text-gray-300">
+          <li><a href="#" class="hover:text-white transition-colors">Documentation</a></li>
+          <li><a href="#" class="hover:text-white transition-colors">API Reference</a></li>
+          <li><a href="#" class="hover:text-white transition-colors">Tutorials</a></li>
+          <li><a href="#" class="hover:text-white transition-colors">FAQs</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4 class="text-lg font-semibold mb-4">Connect With Us</h4>
+        <div class="flex space-x-4 mb-4">
+          <a href="#" class="bg-gray-700 w-10 h-10 rounded-full flex items-center justify-center hover:bg-gray-600 transition-colors">
+            <i class="fab fa-facebook-f"></i>
+          </a>
+          <a href="#" class="bg-gray-700 w-10 h-10 rounded-full flex items-center justify-center hover:bg-gray-600 transition-colors">
+            <i class="fab fa-twitter"></i>
+          </a>
+          <a href="#" class="bg-gray-700 w-10 h-10 rounded-full flex items-center justify-center hover:bg-gray-600 transition-colors">
+            <i class="fab fa-linkedin-in"></i>
+          </a>
+          <a href="#" class="bg-gray-700 w-10 h-10 rounded-full flex items-center justify-center hover:bg-gray-600 transition-colors">
+            <i class="fab fa-instagram"></i>
+          </a>
+        </div>
+        <p class="text-gray-300">Subscribe to our newsletter for updates</p>
+      </div>
+    </div>
+    <div class="border-t border-gray-700 mt-8 pt-8 text-center text-gray-400">
+      <p>&copy; 2024 Tamil Nadu e-Sevai. All rights reserved.</p>
+    </div>
+  </div>
+</footer>
+<!-- Chatbot -->
+<div class="fixed bottom-6 right-6 z-50">
+  <button id="chatToggle" class="tn-emblem text-white w-14 h-14 rounded-full shadow-lg flex items-center justify-center hover:bg-green-800 transition-colors">
+    <i class="fas fa-comments text-xl"></i>
+  </button>
+  <div id="chatWindow" class="chat-window absolute bottom-20 right-0 w-96 bg-white rounded-lg shadow-2xl">
+    <div class="tn-emblem text-white p-4 rounded-t-lg flex justify-between items-center">
+      <div class="flex items-center">
+        <i class="fas fa-robot mr-2"></i>
+        <h3 class="font-semibold">Citizen AI Assistant</h3>
+      </div>
+      <button id="closeChat" class="text-white hover:text-gray-200">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <div id="chatMessages" class="h-96 overflow-y-auto p-4 bg-gray-50">
+      <div class="message-bubble mb-4">
+        <div class="tn-emblem text-white rounded-lg p-3 inline-block max-w-xs">
+          <p class="text-sm">Hello! I'm your Citizen AI Assistant. How can I help you today?</p>
+        </div>
+      </div>
+    </div>
+    <div class="p-4 border-t">
+      <div class="flex space-x-2">
+        <input type="text" id="chatInput" placeholder="Type your message..." 
+               class="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500" />
+        <button id="sendMessage" class="tn-emblem text-white px-4 py-2 rounded-lg hover:bg-green-800 transition-colors">
+          <i class="fas fa-paper-plane"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+  // Utility function to scroll to section
+  function scrollToSection(sectionId) {
+    const section = document.getElementById(sectionId);
+    if (section) {
+      section.scrollIntoView({ behavior: 'smooth' });
+    }
+  }
+
+  // Handle login modal
+  const loginButton = document.getElementById('loginButton');
+  const loginModal = document.getElementById('loginModal');
+  const loginForm = document.getElementById('loginForm');
+  const loginTick = document.getElementById('loginTick');
+
+  loginButton.addEventListener('click', () => {
+    loginModal.classList.remove('hidden');
+  });
+
+  document.getElementById('cancelLogin').addEventListener('click', () => {
+    loginModal.classList.add('hidden');
+  });
+
+  loginForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const username = document.getElementById('loginUser').value.trim();
+    if (username) {
+      // Show tick icon
+      loginTick.classList.remove('hidden');
+      // Change button data-loggedin attribute
+      loginButton.setAttribute('data-loggedin', 'true');
+      // Optionally, change button text
+      loginButton.innerHTML = `<i class="fas fa-user mr-2"></i>${username} <span id="loginTick" class="ml-2 text-green-300"><i class="fas fa-check-circle"></i></span>`;
+      // Hide modal
+      loginModal.classList.add('hidden');
+    }
+  });
+
+  // Initialize citizenAI class
+  class CitizenAI {
+    constructor() {
+      this.requests = JSON.parse(localStorage.getItem('citizenRequests')) || [];
+      this.chatResponses = {
+        'hello': 'Hello! How can I assist you today?',
+        'help': 'I can help you submit requests, track status, or find information about our services.',
+        'services': 'ID & Documents, Property Services, Education, Healthcare, Employment, Transportation, and more.',
+        'status': 'You can check your request status in the Track section. Enter your request ID or name.',
+        'contact': 'You can contact our support team at support@tnesevai.tn.gov.in or call 1-800-TN-SEVAI.',
+        'hours': 'Our services are available 24/7 through our online platform.',
+        'location': 'We serve citizens across the entire Tamil Nadu state via our digital portal.'
+      };
+      this.init();
+    }
+    init() {
+      this.setupEventListeners();
+      this.renderRequests();
+      this.setupChatbot();
+    }
+    setupEventListeners() {
+      document.getElementById('requestForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        this.submitRequest();
+      });
+      document.getElementById('chatToggle').addEventListener('click', () => {
+        document.getElementById('chatWindow').classList.add('active');
+      });
+      document.getElementById('headerChatToggle').addEventListener('click', () => {
+        document.getElementById('chatWindow').classList.add('active');
+      });
+      document.getElementById('closeChat').addEventListener('click', () => {
+        document.getElementById('chatWindow').classList.remove('active');
+      });
+      document.getElementById('sendMessage').addEventListener('click', () => {
+        this.sendChatMessage();
+      });
+      document.getElementById('chatInput').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+          this.sendChatMessage();
+        }
+      });
+      document.getElementById('trackSearch').addEventListener('input', (e) => {
+        this.searchRequests(e.target.value);
+      });
+    }
+    submitRequest() {
+      const formData = {
+        id: Date.now(),
+        serviceType: document.getElementById('serviceType').value,
+        title: document.getElementById('requestTitle').value,
+        description: document.getElementById('requestDescription').value,
+        userName: document.getElementById('userName').value,
+        userEmail: document.getElementById('userEmail').value,
+        priority: document.querySelector('input[name="priority"]:checked').value,
+        status: 'pending',
+        dateSubmitted: new Date().toLocaleDateString(),
+        estimatedCompletion: this.calculateEstimatedCompletion()
+      };
+      if (!formData.serviceType || !formData.title || !formData.description || !formData.userName || !formData.userEmail) {
+        this.showNotification('Please fill in all required fields', 'error');
+        return;
+      }
+      this.requests.push(formData);
+      localStorage.setItem('citizenRequests', JSON.stringify(this.requests));
+      
+      document.getElementById('requestForm').reset();
+      this.renderRequests();
+      this.showNotification('Request submitted successfully!', 'success');
+      
+      scrollToSection('track');
+    }
+    calculateEstimatedCompletion() {
+      const priority = document.querySelector('input[name="priority"]:checked').value;
+      const days = priority === 'high' ? 3 : priority === 'medium' ? 7 : 14;
+      const date = new Date();
+      date.setDate(date.getDate() + days);
+      return date.toLocaleDateString();
+    }
+    renderRequests(requestsToRender = this.requests) {
+      const requestsList = document.getElementById('requestsList');
+      
+      if (requestsToRender.length === 0) {
+        requestsList.innerHTML = `
+          <div class="p-8 text-center text-gray-500">
+            <i class="fas fa-inbox text-4xl mb-4"></i>
+            <p>No requests found. Submit your first request above!</p>
+          </div>
+        `;
+        return;
+      }
+      requestsList.innerHTML = requestsToRender.map(request => `
+        <div class="p-6 hover:bg-gray-50 transition-colors">
+          <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+            <div class="mb-4 md:mb-0">
+              <div class="flex items-center mb-2">
+                <h4 class="text-lg font-semibold text-gray-800 mr-3">${request.title}</h4>
+                <span class="status-badge ${this.getStatusClass(request.status)} text-xs px-2 py-1 rounded-full">${request.status.toUpperCase()}</span>
+              </div>
+              <p class="text-gray-600 mb-2">${request.description}</p>
+              <div class="flex items-center text-sm text-gray-500">
+                <i class="fas fa-user mr-1"></i>
+                <span class="mr-4">${request.userName}</span>
+                <i class="fas fa-calendar mr-1"></i>
+                <span class="mr-4">Submitted: ${request.dateSubmitted}</span>
+                <i class="fas fa-clock mr-1"></i>
+                <span>Est. Completion: ${request.estimatedCompletion}</span>
+              </div>
+            </div>
+            <div class="flex items-center space-x-3">
+              <div class="text-right">
+                <div class="text-sm text-gray-500">Priority</div>
+                <div class="font-medium ${this.getPriorityClass(request.priority)}">${request.priority.toUpperCase()}</div>
+              </div>
+              <button onclick="citizenAI.viewRequestDetails(${request.id})" class="bg-green-100 text-green-600 px-3 py-1 rounded-lg hover:bg-green-200 transition-colors">
+                View Details
+              </button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+    getStatusClass(status) {
+      switch(status) {
+        case 'pending': return 'bg-yellow-100 text-yellow-600';
+        case 'in-progress': return 'bg-blue-100 text-blue-600';
+        case 'completed': return 'bg-green-100 text-green-600';
+        case 'rejected': return 'bg-red-100 text-red-600';
+        default: return 'bg-gray-100 text-gray-600';
+      }
+    }
+    getPriorityClass(priority) {
+      switch(priority) {
+        case 'high': return 'text-red-600';
+        case 'medium': return 'text-yellow-600';
+        case 'low': return 'text-green-600';
+        default: return 'text-gray-600';
+      }
+    }
+    viewRequestDetails(id) {
+      const request = this.requests.find(r => r.id === id);
+      if (request) {
+        alert(`Request Details:\n\nTitle: ${request.title}\nStatus: ${request.status}\nPriority: ${request.priority}\nSubmitted: ${request.dateSubmitted}\nEstimated Completion: ${request.estimatedCompletion}\n\nDescription: ${request.description}`);
+      }
+    }
+    searchRequests(query) {
+      const filtered = this.requests.filter(request => 
+        request.title.toLowerCase().includes(query.toLowerCase()) ||
+        request.description.toLowerCase().includes(query.toLowerCase()) ||
+        request.userName.toLowerCase().includes(query.toLowerCase())
+      );
+      this.renderRequests(filtered);
+    }
+    setupChatbot() {
+      this.chatResponses = {
+        'hello': 'Hello! How can I assist you today?',
+        'help': 'I can help you submit requests, track status, or find information about our services.',
+        'services': 'ID & Documents, Property Services, Education, Healthcare, Employment, Transportation, and more.',
+        'status': 'You can check your request status in the Track section. Enter your request ID or name.',
+        'contact': 'You can contact our support team at support@tnesevai.tn.gov.in or call 1-800-TN-SEVAI.',
+        'hours': 'Our services are available 24/7 through our online platform.',
+        'location': 'We serve citizens across the entire Tamil Nadu state via our digital portal.'
+      };
+    }
+    sendChatMessage() {
+      const input = document.getElementById('chatInput');
+      const message = input.value.trim();
+      if (!message) return;
+      this.addChatMessage(message, 'user');
+      input.value = '';
+      setTimeout(() => {
+        const response = this.getAIResponse(message);
+        this.addChatMessage(response, 'ai');
+      }, 1000);
+    }
+    addChatMessage(message, sender) {
+      const messagesContainer = document.getElementById('chatMessages');
+      const messageDiv = document.createElement('div');
+      messageDiv.className = 'message-bubble mb-4';
+      if (sender === 'user') {
+        messageDiv.innerHTML = `
+          <div class="bg-gray-200 text-gray-800 rounded-lg p-3 inline-block max-w-xs ml-auto">
+            <p class="text-sm">${message}</p>
+          </div>
+        `;
+      } else {
+        messageDiv.innerHTML = `
+          <div class="tn-emblem text-white rounded-lg p-3 inline-block max-w-xs">
+            <p class="text-sm">${message}</p>
+          </div>
+        `;
+      }
+      messagesContainer.appendChild(messageDiv);
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+    getAIResponse(message) {
+      const lowerMessage = message.toLowerCase();
+      for (const [key, response] of Object.entries(this.chatResponses)) {
+        if (lowerMessage.includes(key)) {
+          return response;
+        }
+      }
+      if (lowerMessage.includes('thanks') || lowerMessage.includes('thank you')) {
+        return "You're welcome! Is there anything else I can help with?";
+      } else if (lowerMessage.includes('bye') || lowerMessage.includes('goodbye')) {
+        return "Goodbye! Feel free to reach out if you need further assistance.";
+      } else {
+        return "I understand you're asking about '" + message + "'. Please ask about services, status, or assistance.";
+      }
+    }
+    showNotification(message, type='info') {
+      const notification = document.createElement('div');
+      notification.className = `fixed top-4 right-4 px-6 py-3 rounded-lg shadow-lg z-50 fade-in ${
+        type === 'success' ? 'bg-green-500 text-white' :
+        type === 'error' ? 'bg-red-500 text-white' :
+        'bg-green-600 text-white'
+      }`;
+      notification.innerHTML = `
+        <div class="flex items-center">
+          <i class="fas ${type==='success' ? 'fa-check-circle' : type==='error' ? 'fa-exclamation-circle' : 'fa-info-circle'} mr-2"></i>
+          ${message}
+        </div>
+      `;
+      document.body.appendChild(notification);
+      setTimeout(() => {
+        notification.remove();
+      }, 3000);
+    }
+  }
+
+  // Initialize the application
+  const citizenAI = new CitizenAI();
+
+  // Sample data if no requests exist
+  if (citizenAI.requests.length === 0) {
+    const sampleRequests = [
+      {
+        id: 1,
+        serviceType: 'id',
+        title: 'Passport Renewal Application',
+        description: 'Need to renew my passport expiring next month.',
+        userName: 'Raja Kumar',
+        userEmail: 'raja@example.com',
+        priority: 'high',
+        status: 'in-progress',
+        dateSubmitted: '2024-01-15',
+        estimatedCompletion: '2024-01-20'
+      },
+      {
+        id: 2,
+        serviceType: 'property',
+        title: 'Property Tax Payment',
+        description: 'Annual property tax payment for residential property.',
+        userName: 'Priya Sasi',
+        userEmail: 'priya@example.com',
+        priority: 'medium',
+        status: 'completed',
+        dateSubmitted: '2024-01-10',
+        estimatedCompletion: '2024-01-12'
+      },
+      {
+        id: 3,
+        serviceType: 'education',
+        title: 'Assistance Application',
+        description: 'Application for college education grant.',
+        userName: 'Karthik Ravi',
+        userEmail: 'karthik@example.com',
+        priority: 'high',
+        status: 'pending',
+        dateSubmitted: '2024-01-18',
+        estimatedCompletion: '2024-02-01'
+      }
+    ];
+    citizenAI.requests = sampleRequests;
+    localStorage.setItem('citizenRequests', JSON.stringify(citizenAI.requests));
+    citizenAI.renderRequests();
+  }
+</script>
+</body>
+</html>
